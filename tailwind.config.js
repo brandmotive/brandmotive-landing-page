@@ -51,6 +51,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "brand-teal": "#1FA996",
+        "brand-navy": "#003087",
+        "brand-orange": "#FABE61",
+        "brand-gray": "#F5F5F5",
+      },
+      fontFamily: {
+        heading: ["'Space Grotesk'", "sans-serif"],
+        body: ["Inter", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

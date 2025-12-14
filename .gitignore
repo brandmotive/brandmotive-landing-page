@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # AI Agent Files
-.qodo/
+.gemini
