@@ -1,12 +1,8 @@
 pipeline {
-    agent {
-        label 'ec2-agent'
-    }
+    agent any
 
     environment {
-        // Ensure these variables are set in Jenkins Job configuration or Global configuration
-        // S3_BUCKET = 'your-bucket-name'
-        // CF_DISTRIBUTION_ID = 'your-distribution-id'
+        // Variables S3_BUCKET, CF_DISTRIBUTION_ID and AWS_REGION are injected via Jenkins extension
         CI = 'true'
     }
 
@@ -31,18 +27,30 @@ pipeline {
         }
 
         stage('Deploy') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    // Combine args to ensure both entrypoint override and root user are applied
+                    args '--entrypoint="" -u root:root'
+                }
+            }
+            environment {
+                AWS_PAGER = ""
+            }
             steps {
+                sh 'rm -rf dist'
                 unstash 'dist'
                 script {
-                    if (!env.S3_BUCKET || !env.CF_DISTRIBUTION_ID) {
-                        error "S3_BUCKET and CF_DISTRIBUTION_ID must be set as environment variables."
+                    if (!S3_BUCKET || !CF_DISTRIBUTION_ID || !AWS_REGION) {
+                        error "S3_BUCKET, CF_DISTRIBUTION_ID and AWS_REGION must be set as environment variables."
                     }
                 }
-                // Sync to S3
-                sh "aws s3 sync dist/ s3://${env.S3_BUCKET} --delete --acl public-read"
-                
-                // Invalidate CloudFront cache
-                sh "aws cloudfront create-invalidation --distribution-id ${env.CF_DISTRIBUTION_ID} --paths '/*'"
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    sh 'echo "Deploying application..."'
+                    // Add --debug to diagnose slow sync
+                    sh "aws s3 sync dist s3://${S3_BUCKET} --delete --region ${AWS_REGION}"
+                    sh "aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --paths '/*' --region ${AWS_REGION}"
+                }
             }
         }
     }

@@ -32,8 +32,8 @@ const Navbar = () => {
         >
             <div className="container mx-auto px-6 flex items-center justify-between">
                 {/* Logo */}
-                <a href="#" className="text-2xl font-heading font-bold text-brand-navy tracking-tighter">
-                    Brand<span className="text-brand-teal">Motive</span>
+                <a href="#">
+                    <img src="/logo.png" alt="Brandmotive" className="h-8 w-auto" />
                 </a>
 
                 {/* Desktop Nav */}
